@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>家长端 - 积分管理</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: 'Microsoft YaHei', sans-serif; background: #f0f4f8; color:#333; min-height:100vh; }
+.header { background: linear-gradient(135deg, #1a73e8, #4285f4); color:#fff; padding:16px 24px; display:flex; align-items:center; justify-content:space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+.header h1 { font-size:22px; }
+.header .nav a { color:#fff; text-decoration:none; margin-left:16px; padding:6px 12px; border-radius:4px; background:rgba(255,255,255,0.2); transition:background .2s; }
+.header .nav a:hover { background:rgba(255,255,255,0.35); }
+.container { max-width:1200px; margin:0 auto; padding:20px; }
+.grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.card { background:#fff; border-radius:8px; padding:20px; box-shadow:0 1px 4px rgba(0,0,0,0.08); margin-bottom:20px; }
+.card h2 { font-size:18px; margin-bottom:16px; padding-bottom:8px; border-bottom:2px solid #e8eaed; color:#1a73e8; }
+.form-group { margin-bottom:12px; }
+.form-group label { display:block; font-size:13px; color:#5f6368; margin-bottom:4px; font-weight:600; }
+.form-group input, .form-group select { width:100%; padding:8px 12px; border:1px solid #dadce0; border-radius:6px; font-size:14px; outline:none; transition:border .2s; }
+.form-group input:focus, .form-group select:focus { border-color:#1a73e8; }
+.form-row { display:flex; gap:10px; }
+.form-row .form-group { flex:1; }
+.btn { padding:8px 20px; border:none; border-radius:6px; font-size:14px; cursor:pointer; font-weight:600; transition:all .2s; }
+.btn-primary { background:#1a73e8; color:#fff; }
+.btn-primary:hover { background:#1557b0; }
+.btn-danger { background:#ea4335; color:#fff; }
+.btn-danger:hover { background:#c5221f; }
+.btn-sm { padding:4px 12px; font-size:12px; }
+table { width:100%; border-collapse:collapse; font-size:13px; }
+table th { background:#f8f9fa; padding:10px 8px; text-align:left; border-bottom:2px solid #e8eaed; color:#5f6368; font-weight:600; }
+table td { padding:8px; border-bottom:1px solid #e8eaed; }
+table tr:hover { background:#f8f9fa; }
+.tag { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; }
+.tag-once { background:#e8f5e9; color:#2e7d32; }
+.tag-daily { background:#fff3e0; color:#e65100; }
+.tag-task { background:#e3f2fd; color:#1565c0; }
+.tag-manual { background:#fce4ec; color:#c62828; }
+.tag-redeem { background:#f3e5f5; color:#6a1b9a; }
+.points-badge { font-weight:700; }
+.points-positive { color:#2e7d32; }
+.points-negative { color:#c62828; }
+.empty { text-align:center; color:#999; padding:20px; }
+.toast { position:fixed; top:20px; right:20px; padding:12px 24px; border-radius:8px; color:#fff; font-weight:600; z-index:9999; animation:slideIn .3s ease; box-shadow:0 4px 12px rgba(0,0,0,0.2); }
+.toast-success { background:#2e7d32; }
+.toast-error { background:#c62828; }
+@keyframes slideIn { from { transform:translateX(100%); opacity:0; } to { transform:translateX(0); opacity:1; } }
+@media(max-width:768px) { .grid { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>&#x1F4CB; 家长端 - 积分管理</h1>
+  <div class="nav">
+    <a href="/child">&#x1F476; 切换到孩子端</a>
+  </div>
+</div>
+
+<div class="container">
+
+<div class="grid">
+  <!-- Task Management -->
+  <div class="card">
+    <h2>&#x1F4DD; 任务管理</h2>
+    <div class="form-group">
+      <label>任务名称</label>
+      <input type="text" id="taskName" placeholder="例如：整理书桌">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>积分值</label>
+        <input type="number" id="taskPoints" value="5" min="1">
+      </div>
+      <div class="form-group">
+        <label>任务类型</label>
+        <select id="taskType">
+          <option value="once">一次性任务</option>
+          <option value="daily">周期性任务（每日刷新）</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="createTask()" style="width:100%">&#x2795; 添加任务</button>
+    <div style="margin-top:16px" id="taskList"></div>
+  </div>
+
+  <!-- Points Adjustment & History -->
+  <div>
+    <div class="card">
+      <h2>&#x1F4B0; 积分调整</h2>
+      <div class="form-group">
+        <label>变动值（正数增加，负数扣除）</label>
+        <input type="number" id="adjustPoints" placeholder="例如：10 或 -5">
+      </div>
+      <div class="form-group">
+        <label>变更原因</label>
+        <input type="text" id="adjustReason" placeholder="例如：表现优秀奖励">
+      </div>
+      <button class="btn btn-primary" onclick="adjustPoints()" style="width:100%">&#x2705; 确认调整</button>
+    </div>
+
+    <div class="card">
+      <h2>&#x1F4CA; 积分历史</h2>
+      <div id="historyTable"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Redeem Items Management -->
+<div class="card">
+  <h2>&#x1F381; 奖品管理</h2>
+  <div class="form-row">
+    <div class="form-group" style="flex:2">
+      <label>奖品名称</label>
+      <input type="text" id="redeemName" placeholder="例如：看一集动画片">
+    </div>
+    <div class="form-group" style="flex:1">
+      <label>所需积分</label>
+      <input type="number" id="redeemPoints" value="20" min="1">
+    </div>
+  </div>
+  <button class="btn btn-primary" onclick="createRedeemItem()">&#x2795; 添加奖品</button>
+  <div style="margin-top:16px" id="redeemList"></div>
+</div>
+
+</div>
+
+<script>
+const API = '/api';
+
+function toast(msg, success) {
+  const el = document.createElement('div');
+  el.className = 'toast ' + (success ? 'toast-success' : 'toast-error');
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2500);
+}
+
+async function fetchJSON(url, opts) {
+  const res = await fetch(url, opts);
+  return res.json();
+}
+
+// ====== Tasks ======
+async function loadTasks() {
+  const res = await fetchJSON(API + '/tasks');
+  if (!res.success) return;
+  const tasks = res.data || [];
+  const el = document.getElementById('taskList');
+  if (tasks.length === 0) {
+    el.innerHTML = '<div class="empty">暂无任务，请添加</div>';
+    return;
+  }
+  el.innerHTML = '<table><thead><tr><th>名称</th><th>积分</th><th>类型</th><th>操作</th></tr></thead><tbody>' +
+    tasks.map(t => '<tr><td>' + t.name + '</td><td class="points-badge">' + t.points + '</td><td><span class="tag tag-' + t.task_type + '">' + (t.task_type === 'once' ? '一次性' : '周期性') + '</span></td><td><button class="btn btn-danger btn-sm" onclick="deleteTask(' + t.id + ')">删除</button></td></tr>').join('') +
+    '</tbody></table>';
+}
+
+async function createTask() {
+  const name = document.getElementById('taskName').value.trim();
+  const pts = parseInt(document.getElementById('taskPoints').value);
+  const type = document.getElementById('taskType').value;
+  if (!name || !pts || pts <= 0) return toast('请填写完整信息', false);
+  const res = await fetchJSON(API + '/tasks', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({name, points: pts, task_type: type})
+  });
+  toast(res.message, res.success);
+  if (res.success) { document.getElementById('taskName').value=''; document.getElementById('taskPoints').value='5'; loadTasks(); }
+}
+
+async function deleteTask(id) {
+  if (!confirm('确定删除该任务吗？')) return;
+  const res = await fetchJSON(API + '/tasks/' + id, { method:'DELETE' });
+  toast(res.message, res.success);
+  if (res.success) loadTasks();
+}
+
+// ====== Points ======
+async function adjustPoints() {
+  const val = parseInt(document.getElementById('adjustPoints').value);
+  const reason = document.getElementById('adjustReason').value.trim();
+  if (isNaN(val) || val === 0 || !reason) return toast('请填写完整信息', false);
+  const res = await fetchJSON(API + '/points/adjust', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({points_change: val, reason})
+  });
+  toast(res.message, res.success);
+  if (res.success) { document.getElementById('adjustPoints').value=''; document.getElementById('adjustReason').value=''; loadHistory(); }
+}
+
+async function loadHistory() {
+  const res = await fetchJSON(API + '/points/history');
+  if (!res.success) return;
+  const items = res.data || [];
+  const el = document.getElementById('historyTable');
+  if (items.length === 0) {
+    el.innerHTML = '<div class="empty">暂无记录</div>';
+    return;
+  }
+  const typeMap = {task:'任务完成', manual:'手动调整', redeem:'兑换奖品'};
+  el.innerHTML = '<table><thead><tr><th>时间</th><th>变动</th><th>原因</th><th>类型</th></tr></thead><tbody>' +
+    items.map(h => '<tr><td>' + new Date(h.created_at).toLocaleString('zh-CN') + '</td><td class="points-badge ' + (h.points_change >= 0 ? 'points-positive' : 'points-negative') + '">' + (h.points_change >= 0 ? '+' : '') + h.points_change + '</td><td>' + h.reason + '</td><td><span class="tag tag-' + h.type + '">' + (typeMap[h.type] || h.type) + '</span></td></tr>').join('') +
+    '</tbody></table>';
+}
+
+// ====== Redeem Items ======
+async function loadRedeemItems() {
+  const res = await fetchJSON(API + '/redeem-items');
+  if (!res.success) return;
+  const items = res.data || [];
+  const el = document.getElementById('redeemList');
+  if (items.length === 0) {
+    el.innerHTML = '<div class="empty">暂无奖品，请添加</div>';
+    return;
+  }
+  el.innerHTML = '<table><thead><tr><th>奖品名称</th><th>所需积分</th><th>操作</th></tr></thead><tbody>' +
+    items.map(i => '<tr><td>' + i.name + '</td><td class="points-badge">' + i.points_required + '</td><td><button class="btn btn-danger btn-sm" onclick="deleteRedeem(' + i.id + ')">删除</button></td></tr>').join('') +
+    '</tbody></table>';
+}
+
+async function createRedeemItem() {
+  const name = document.getElementById('redeemName').value.trim();
+  const pts = parseInt(document.getElementById('redeemPoints').value);
+  if (!name || !pts || pts <= 0) return toast('请填写完整信息', false);
+  const res = await fetchJSON(API + '/redeem-items', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({name, points_required: pts})
+  });
+  toast(res.message, res.success);
+  if (res.success) { document.getElementById('redeemName').value=''; document.getElementById('redeemPoints').value='20'; loadRedeemItems(); }
+}
+
+async function deleteRedeem(id) {
+  if (!confirm('确定删除该奖品吗？')) return;
+  const res = await fetchJSON(API + '/redeem-items/' + id, { method:'DELETE' });
+  toast(res.message, res.success);
+  if (res.success) loadRedeemItems();
+}
+
+// Init
+loadTasks();
+loadHistory();
+loadRedeemItems();
+</script>
+</body>
+</html>
