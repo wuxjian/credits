@@ -61,8 +61,8 @@ func main() {
 
 	// Static files
 	staticDir := getStaticDir()
-	r.StaticFile("/parent", filepath.Join(staticDir, "parent.html"))
-	r.StaticFile("/child", filepath.Join(staticDir, "child.html"))
+	r.StaticFile("/parent.html", filepath.Join(staticDir, "parent.html"))
+	r.StaticFile("/child.html", filepath.Join(staticDir, "child.html"))
 
 	// Redirect root to child page
 	r.GET("/", func(c *gin.Context) {
